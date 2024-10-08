@@ -2,8 +2,6 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from .models import Subscription
-
 
 class Base64ImageField(serializers.ImageField):
     """Кастомный класс для расширения стандартного ImageField."""

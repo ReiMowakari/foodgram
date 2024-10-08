@@ -47,7 +47,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = [IngredientFilter,]
+    filter_backends = [IngredientFilter, ]
     permission_classes = [AllowAny]
     pagination_class = None
 
@@ -57,7 +57,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = [ReadOnly]
-    filter_backends = [DjangoFilterBackend,]
+    filter_backends = [DjangoFilterBackend, ]
     filterset_class = RecipeFilter
 
     def get_permissions(self):
@@ -125,12 +125,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def common_delete_from(self, model, user, pk):
-        """Общий метод для удаление рецепта из списка покупок или избранного."""
+        """
+        Общий метод для удаление рецепта из списка покупок или избранного.
+        """
         # Проверка существования рецепта
         try:
             Recipe.objects.get(id=pk)
         except Recipe.DoesNotExist:
-            return Response({'errors': UNEXIST_RECIPE_CREATE_ERROR}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'errors': UNEXIST_RECIPE_CREATE_ERROR},
+                status=status.HTTP_404_NOT_FOUND)
         obj = model.objects.filter(user=user, recipe__id=pk)
         if obj.exists():
             obj.delete()

@@ -99,14 +99,17 @@ class UserViewSet(djoser_views.UserViewSet):
                     {'error': SUBSCRIBE_SELF_ERROR_MESSAGE},
                     status=status.HTTP_400_BAD_REQUEST)
             # Проверка уже существующей подписки.
-            elif Subscription.objects.filter(followed=author, follower=user).exists():
+            elif Subscription.objects.filter(
+                    followed=author, follower=user).exists():
                 return Response(
                     {'error': SUBSCRIBE_ERROR_MESSAGE},
                     status=status.HTTP_400_BAD_REQUEST)
             else:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
 
         if Subscription.objects.filter(followed=author, follower=user).exists():
             subscription = Subscription.objects.get(followed=author, follower=user)

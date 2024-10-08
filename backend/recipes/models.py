@@ -69,7 +69,8 @@ class Recipe(models.Model):
         User, verbose_name='Автор рецепта', on_delete=models.CASCADE
     )
     ingredients = models.ManyToManyField(
-        Ingredient, through='RecipeIngredients', verbose_name='Ингредиенты рецепта'
+        Ingredient, through='RecipeIngredients',
+        verbose_name='Ингредиенты рецепта'
     )
     name = models.CharField(
         verbose_name='Наименование рецепта', max_length=RECIPE_NAME_MAX_LENGTH

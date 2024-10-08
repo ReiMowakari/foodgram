@@ -140,7 +140,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'errors': DUPLICATE_OF_INGREDIENT_CREATE_ERROR}
                 )
-            created = RecipeIngredients.objects.update_or_create(
+            RecipeIngredients.objects.update_or_create(
                 recipe=instance, ingredient=base_ingredient,
                 defaults={'amount': ingredient.get('amount')}
             )
