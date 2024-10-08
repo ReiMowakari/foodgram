@@ -1,2 +1,176 @@
+from datetime import datetime
+from django.db.models import Sum
+from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated
+)
+from rest_framework.response import Response
+
+from .constants import (
+    UNEXIST_RECIPE_CREATE_ERROR, DUPLICATE_OF_RECIPE_ADD_CART,
+    UNEXIST_SHOPPING_CART_ERROR
+
+)
+from .filters import RecipeFilter, IngredientFilter
+from .models import (
+    Ingredient, Favorite, Recipe, RecipeIngredients, ShoppingCart, Tag
+)
+from .serializers import (
+    IngredientSerializer,
+    RecipeCreateSerializer,
+    ShortRecipeSerializer,
+    TagSerializer,
+)
+
+from users.permissions import (
+    IsAuthor,
+    ReadOnly
+)
 
 
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для Тэгов."""
+
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для Ингредиентов."""
+
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    filter_backends = [IngredientFilter,]
+    permission_classes = [AllowAny]
+    pagination_class = None
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    """Вьюсет для Рецептов."""
+
+    queryset = Recipe.objects.all()
+    permission_classes = [ReadOnly]
+    filter_backends = [DjangoFilterBackend,]
+    filterset_class = RecipeFilter
+
+    def get_permissions(self):
+        """Метод для прав доступа, в зависимости от метода."""
+        if self.request.method in ("GET", "POST"):
+            self.permission_classes = [IsAuthenticated | ReadOnly]
+        elif self.request.method in ("PATCH", "DELETE"):
+            self.permission_classes = [IsAuthor]
+        return super().get_permissions()
+
+    def perform_create(self, serializer):
+        """Метод для создания рецепта."""
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=self.request.user)
+
+    def get_serializer_class(self):
+        """Метод для сериализации."""
+        return RecipeCreateSerializer
+
+    @action(detail=True, methods=['GET'], url_path='get-link')
+    def get_short_link(self, request, pk):
+        """Метод для получения короткой ссылки."""
+        try:
+            recipe = self.get_object()
+        except Recipe.DoesNotExist:
+            return Response(
+                {'message': UNEXIST_RECIPE_CREATE_ERROR},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        scheme = request.scheme
+        host = request.get_host()
+        domain = f'{scheme}://{host}'
+        return Response(
+            {'short-link': f'{domain}/s/{recipe.short_link}'},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['POST', 'DELETE'])
+    def shopping_cart(self, request, pk):
+        """Общий метод для добавления/удаления рецептов в список покупок."""
+        if request.method == 'POST':
+            return self.common_add_to(ShoppingCart, request.user, pk)
+        else:
+            return self.common_delete_from(ShoppingCart, request.user, pk)
+
+    @action(detail=True, methods=['POST', 'DELETE'])
+    def favorite(self, request, pk):
+        """Общий метод для добавления/удаления рецептов в избранное."""
+        if request.method == 'POST':
+            return self.common_add_to(Favorite, request.user, pk)
+        else:
+            return self.common_delete_from(Favorite, request.user, pk)
+
+    def common_add_to(self, model, user, pk):
+        """Общий метод для добавления рецепта в список покупок или избранное"""
+        if model.objects.filter(user=user, recipe__id=pk).exists():
+            return Response(
+                {'errors': DUPLICATE_OF_RECIPE_ADD_CART},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        recipe = get_object_or_404(Recipe, id=pk)
+        model.objects.create(user=user, recipe=recipe)
+        serializer = ShortRecipeSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def common_delete_from(self, model, user, pk):
+        """Общий метод для удаление рецепта из списка покупок или избранного."""
+        # Проверка существования рецепта
+        try:
+            Recipe.objects.get(id=pk)
+        except Recipe.DoesNotExist:
+            return Response({'errors': UNEXIST_RECIPE_CREATE_ERROR}, status=status.HTTP_404_NOT_FOUND)
+        obj = model.objects.filter(user=user, recipe__id=pk)
+        if obj.exists():
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'errors': UNEXIST_RECIPE_CREATE_ERROR},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(detail=False, methods=['GET'])
+    def download_shopping_cart(self, request):
+        """Метод для скачивания списка покупок."""
+        user = request.user
+        print('test')
+        if not user.shopping_cart.exists():
+            return Response(
+                {'errors': UNEXIST_SHOPPING_CART_ERROR},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        ingredients = RecipeIngredients.objects.filter(
+            recipe__shopping_cart__user=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount'))
+
+        today = datetime.today()
+        shopping_list = (
+            f'Список покупок для: {user.get_full_name()}\n\n'
+            f'Дата: {today:%Y-%m-%d}\n\n'
+        )
+        shopping_list += '\n'.join([
+            f'- {ingredient["ingredient__name"]} '
+            f'({ingredient["ingredient__measurement_unit"]})'
+            f' - {ingredient["amount"]}'
+            for ingredient in ingredients
+        ])
+        shopping_list += f'\n\nFoodgram ({today:%Y})'
+
+        filename = f'{user.username}_shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
