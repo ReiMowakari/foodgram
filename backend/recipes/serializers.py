@@ -8,7 +8,6 @@ from .models import (
     Ingredient,
     Recipe,
     RecipeIngredients,
-    ShoppingCart,
     Tag
 )
 
@@ -84,7 +83,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """Метод для валидации данных при создании рецепта."""
         ingredients = attrs.get('recipe_ingredients')
         tags = attrs.get('tags')
-        if not ingredients:
+        if not ingredients or not tags:
             raise serializers.ValidationError(
                 AMOUNT_OF_INGREDIENT_CREATE_ERROR
             )

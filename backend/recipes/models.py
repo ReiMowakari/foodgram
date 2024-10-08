@@ -63,20 +63,20 @@ class Recipe(models.Model):
     """Модель для рецептов."""
 
     tags = models.ManyToManyField(
-        Tag, through='RecipeTags'
+        Tag, through='RecipeTags', verbose_name='Тэги рецепта'
     )
     author = models.ForeignKey(
-        to=User, verbose_name='Автор рецепта', on_delete=models.CASCADE
+        User, verbose_name='Автор рецепта', on_delete=models.CASCADE
     )
     ingredients = models.ManyToManyField(
-        Ingredient, through='RecipeIngredients'
+        Ingredient, through='RecipeIngredients', verbose_name='Ингредиенты рецепта'
     )
     name = models.CharField(
         verbose_name='Наименование рецепта', max_length=RECIPE_NAME_MAX_LENGTH
     )
     image = models.ImageField(
         verbose_name='Путь до картинки', blank=True,
-        upload_to='recipe/images'
+        upload_to='recipes/images'
     )
     text = models.TextField(
         verbose_name='Описание'
@@ -109,10 +109,10 @@ class RecipeTags(models.Model):
     """Промежуточная модель для связи моделей Рецетов и Тэгов."""
 
     recipe = models.ForeignKey(
-        to=Recipe, verbose_name='Рецепт', on_delete=models.CASCADE
+        Recipe, verbose_name='Рецепт', on_delete=models.CASCADE
     )
     tag = models.ForeignKey(
-        to=Tag, verbose_name='Тег', on_delete=models.CASCADE
+        Tag, verbose_name='Тег', on_delete=models.CASCADE
     )
 
     class Meta:
@@ -151,7 +151,7 @@ class ShoppingCart(models.Model):
     """Модель для списка покупок."""
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name='Пользователь',
+        User, on_delete=models.CASCADE, verbose_name='Автор списка покупок.',
     )
     recipe = models.ForeignKey(
         Recipe,
