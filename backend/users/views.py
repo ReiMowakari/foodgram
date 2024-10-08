@@ -111,8 +111,10 @@ class UserViewSet(djoser_views.UserViewSet):
                     serializer.data, status=status.HTTP_201_CREATED
                 )
 
-        if Subscription.objects.filter(followed=author, follower=user).exists():
-            subscription = Subscription.objects.get(followed=author, follower=user)
+        if Subscription.objects.filter(
+                followed=author, follower=user).exists():
+            subscription = Subscription.objects.get(
+                followed=author, follower=user)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
