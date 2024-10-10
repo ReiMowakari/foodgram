@@ -140,3 +140,8 @@ dmypy.json
 
 static/
 media/
+
+postman_collection/
+infra/
+frontend/
+data/
