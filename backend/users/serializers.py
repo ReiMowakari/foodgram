@@ -38,10 +38,8 @@ class UserSerializer(MeUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context['request']
-        return Subscription.objects.filter(
-                follower_id=request.user.id,
-                followed_id=obj.id
-            ).exists()
+        return Subscription.objects.filter(follower_id=request.user.id,
+                                           followed_id=obj.id).exists()
 
 
 class AvatarSerializer(serializers.Serializer):
