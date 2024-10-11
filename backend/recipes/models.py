@@ -2,12 +2,12 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from .constants import (
+from api.constants import (
     TAG_NAME_MAX_LENGTH, INGREDIENT_NAME_MAX_LENGTH,
     INGREDIENT_UNIT_MAX_LENGTH, RECIPE_NAME_MAX_LENGTH,
     COOKING_TIME_MIN_VALUE, COOKING_TIME_ERROR_MESSAGE,
     AMOUNT_OF_INGREDIENT_MIN_VALUE,
-    AMOUNT_OF_INGREDIENT_MIN_VALUE_ERROR_MESSAGE,
+    AMOUNT_OF_INGREDIENT_MIN_VALUE_ERROR_MESSAGE, MAX_LENGTH_SHORT_LINK
 )
 from .utils import generate_short_link
 
@@ -92,7 +92,7 @@ class Recipe(models.Model):
     )
     short_link = models.CharField(
         verbose_name='Короткая ссылка', default=generate_short_link,
-        max_length=6
+        max_length=MAX_LENGTH_SHORT_LINK
     )
 
     def __str__(self):

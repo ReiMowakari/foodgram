@@ -3,7 +3,6 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
-
 from .constants import RECIPES_LIMIT
 from .models import Subscription
 from .utils import Base64ImageField
@@ -39,14 +38,10 @@ class UserSerializer(MeUserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context['request']
-        try:
-            Subscription.objects.get(
+        return Subscription.objects.filter(
                 follower_id=request.user.id,
                 followed_id=obj.id
-            )
-            return True
-        except Subscription.DoesNotExist:
-            return False
+            ).exists()
 
 
 class AvatarSerializer(serializers.Serializer):
@@ -69,8 +64,7 @@ class SubscriptionGetSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField(
         method_name='get_is_subscribed')
     recipes = serializers.SerializerMethodField(method_name='get_recipes')
-    recipes_count = serializers.SerializerMethodField(
-        method_name='get_recipes_count')
+    recipes_count = serializers.IntegerField(source='recipes.count')
 
     class Meta:
         model = User
@@ -109,14 +103,6 @@ class SubscriptionGetSerializer(serializers.ModelSerializer):
         if recipes_limit:
             queryset = queryset[:int(recipes_limit)]
         return RecipeShortSerializer(queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        """
-        Метод для получения кол-ва рецептов.
-        :param obj: объект указанного пользователя.
-        :return: кол-во рецептов.
-        """
-        return obj.recipes.all().count()
 
 
 class SubscriptionEditSerializer(serializers.ModelSerializer):

@@ -1,16 +1,16 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from .constants import (
     AMOUNT_OF_INGREDIENT_CREATE_ERROR, AMOUNT_OF_TAG_CREATE_ERROR,
     DUPLICATE_OF_INGREDIENT_CREATE_ERROR, DUPLICATE_OF_TAG_CREATE_ERROR
 )
-from .models import (
+from recipes.models import (
     Ingredient,
     Recipe,
     RecipeIngredients,
     Tag
 )
-
 from users.serializers import UserSerializer
 from users.utils import Base64ImageField
 
@@ -107,30 +107,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
-        """Метод для создания рецептов."""
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('recipe_ingredients')
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
-        for ingredient in ingredients:
-            RecipeIngredients.objects.update_or_create(
+    def create_ingredients(self, recipe, ingredients):
+        """Метод для создания ингредиентов для рецепта."""
+        ingredients_qs = [
+            RecipeIngredients(
                 recipe=recipe,
                 ingredient=ingredient['id'],
                 amount=ingredient['amount']
-            )
-        return recipe
+            ) for ingredient in ingredients
+        ]
+        RecipeIngredients.objects.bulk_create(ingredients_qs)
 
-    def update(self, instance, validated_data):
-        """Метод для обновления рецептов."""
-        ingredients = validated_data.pop('recipe_ingredients')
-        tags = validated_data.pop('tags')
-        instance.tags.set(tags)
-        instance.image = validated_data.get('image', instance.image)
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time)
+    def check_duplicate_ingredients(self, ingredients):
+        """Метод для проверки наличия дубликатов ингредиентов."""
         existing_ingredients = set(
             RecipeIngredients.objects.values_list('ingredient', flat=True)
         )
@@ -140,11 +129,23 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'errors': DUPLICATE_OF_INGREDIENT_CREATE_ERROR}
                 )
-            RecipeIngredients.objects.update_or_create(
-                recipe=instance, ingredient=base_ingredient,
-                defaults={'amount': ingredient.get('amount')}
-            )
-        instance.save()
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        """Метод для создания рецептов."""
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('recipe_ingredients')
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, ingredients)
+        return recipe
+
+    def update(self, instance, validated_data):
+        """Метод для обновления рецептов."""
+        ingredients = validated_data.pop('recipe_ingredients')
+        super().update(instance, validated_data)
+        self.check_duplicate_ingredients(ingredients)
+        self.create_ingredients(instance, ingredients)
         return instance
 
     def to_representation(self, instance):

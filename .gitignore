@@ -142,6 +142,6 @@ static/
 media/
 
 postman_collection/
-infra/
 frontend/
 data/
+docs/

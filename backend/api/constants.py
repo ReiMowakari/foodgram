@@ -1,4 +1,4 @@
-# Константы для приложения Recipe.
+# Константы.
 
 # Константа для длины поля модели Tag.
 TAG_NAME_MAX_LENGTH: int = 32
@@ -6,6 +6,8 @@ TAG_NAME_MAX_LENGTH: int = 32
 INGREDIENT_NAME_MAX_LENGTH: int = 128
 # Константа для длины поля единицы измерения модели Ingredient.
 INGREDIENT_UNIT_MAX_LENGTH: int = 64
+# Константа для длины короткой ссылки модели Recipe.
+MAX_LENGTH_SHORT_LINK: int = 6
 # Константа для длины поля названия модели Recipe.
 RECIPE_NAME_MAX_LENGTH: int = 256
 # Константа для минимального времени приготовления.

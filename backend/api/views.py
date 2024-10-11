@@ -1,6 +1,4 @@
-from datetime import datetime
 from django.db.models import Sum
-from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
@@ -17,7 +15,7 @@ from .constants import (
 
 )
 from .filters import RecipeFilter, IngredientFilter
-from .models import (
+from recipes.models import (
     Ingredient, Favorite, Recipe, RecipeIngredients, ShoppingCart, Tag
 )
 from .serializers import (
@@ -26,11 +24,11 @@ from .serializers import (
     ShortRecipeSerializer,
     TagSerializer,
 )
-
 from users.permissions import (
     IsAuthor,
     ReadOnly
 )
+from recipes.utils import create_report_of_shopping_list
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -59,6 +57,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnly]
     filter_backends = [DjangoFilterBackend, ]
     filterset_class = RecipeFilter
+    serializer_class = RecipeCreateSerializer
 
     def get_permissions(self):
         """Метод для прав доступа, в зависимости от метода."""
@@ -70,12 +69,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Метод для создания рецепта."""
-        serializer.is_valid(raise_exception=True)
         serializer.save(author=self.request.user)
-
-    def get_serializer_class(self):
-        """Метод для сериализации."""
-        return RecipeCreateSerializer
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk):
@@ -148,33 +142,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Метод для скачивания списка покупок."""
         user = request.user
-        print('test')
         if not user.shopping_cart.exists():
             return Response(
                 {'errors': UNEXIST_SHOPPING_CART_ERROR},
                 status=status.HTTP_400_BAD_REQUEST)
-
         ingredients = RecipeIngredients.objects.filter(
-            recipe__shopping_cart__user=request.user
+            recipe__shopping_cart__user=user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
-
-        today = datetime.today()
-        shopping_list = (
-            f'Список покупок для: {user.get_full_name()}\n\n'
-            f'Дата: {today:%Y-%m-%d}\n\n'
-        )
-        shopping_list += '\n'.join([
-            f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__measurement_unit"]})'
-            f' - {ingredient["amount"]}'
-            for ingredient in ingredients
-        ])
-        shopping_list += f'\n\nFoodgram ({today:%Y})'
-
-        filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-        return response
+        return create_report_of_shopping_list(user, ingredients)

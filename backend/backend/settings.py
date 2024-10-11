@@ -1,14 +1,12 @@
 import os
 
-# from dotenv import load_dotenv.
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'foodgramexamplekey')
 
-DEBUG = True
-# os.getenv('DEBUG', 'false').lower() == 'true'.
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'users.User'
