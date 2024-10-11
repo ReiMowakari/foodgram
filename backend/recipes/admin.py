@@ -1,17 +1,22 @@
 from django.contrib import admin
-from django.contrib.admin import display
 
 from .models import (Favorite, Ingredient, RecipeIngredients, Recipe,
                      ShoppingCart, Tag)
 
 
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredients
+    extra = 1
+    min_num = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'added_in_favorites')
-    readonly_fields = ('added_in_favorites',)
-    list_filter = ('author', 'name', 'tags',)
+    search_fields = ('name', 'author__username', 'tags__name')
+    inlines = [RecipeIngredientInline]
 
-    @display(description='Число добавлений в избранное рецепта')
+    @admin.display(description='Число добавлений в избранное рецепта')
     def added_in_favorites(self, obj):
         return obj.favorites.count()
 
@@ -19,12 +24,13 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit',)
-    list_filter = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug',)
+    search_fields = ('name',)
 
 
 @admin.register(ShoppingCart)
