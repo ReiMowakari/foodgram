@@ -3,12 +3,14 @@ from rest_framework import serializers
 
 from .constants import (
     AMOUNT_OF_INGREDIENT_CREATE_ERROR, AMOUNT_OF_TAG_CREATE_ERROR,
-    DUPLICATE_OF_INGREDIENT_CREATE_ERROR, DUPLICATE_OF_TAG_CREATE_ERROR
+    DUPLICATE_OF_INGREDIENT_CREATE_ERROR, DUPLICATE_OF_TAG_CREATE_ERROR,
 )
 from recipes.models import (
     Ingredient,
+    Favorite,
     Recipe,
     RecipeIngredients,
+    ShoppingCart,
     Tag
 )
 from users.serializers import UserSerializer
@@ -91,7 +93,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 AMOUNT_OF_TAG_CREATE_ERROR
             )
-
         set_ingredients = set(
             ingredient.get('id') for ingredient in ingredients
         )
@@ -160,10 +161,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def get_is_favorited(self, obj):
-        return True
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user, recipe=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        return True
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return ShoppingCart.objects.filter(user=request.user, recipe=obj).exists()
+        return False
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):

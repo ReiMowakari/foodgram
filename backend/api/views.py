@@ -120,23 +120,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def common_delete_from(self, model, user, pk):
         """
-        Общий метод для удаление рецепта из списка покупок или избранного.
+        Общий метод для удаления рецепта из списка покупок или избранного.
         """
-        # Проверка существования рецепта
-        try:
-            Recipe.objects.get(id=pk)
-        except Recipe.DoesNotExist:
-            return Response(
-                {'errors': UNEXIST_RECIPE_CREATE_ERROR},
-                status=status.HTTP_404_NOT_FOUND)
-        obj = model.objects.filter(user=user, recipe__id=pk)
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        obj = model.objects.filter(user=user, recipe=recipe)
         if obj.exists():
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': UNEXIST_RECIPE_CREATE_ERROR},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        else:
+            return Response(
+                {'errors': UNEXIST_RECIPE_CREATE_ERROR},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
