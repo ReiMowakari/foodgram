@@ -59,7 +59,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
     serializer_class = RecipeCreateSerializer
 
-
     def get_permissions(self):
         """Метод для прав доступа, в зависимости от метода."""
         if self.request.method in ("GET", "POST"):
