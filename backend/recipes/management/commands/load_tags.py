@@ -35,6 +35,4 @@ class Command(BaseCommand):
                     )
                 )
         self.stdout.write(
-            self.style.SUCCESS('Тэги успешно загружены.'
-            )
-        )
+            self.style.SUCCESS('Тэги успешно загружены.'))
