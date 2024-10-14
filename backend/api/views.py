@@ -149,3 +149,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         return create_report_of_shopping_list(user, ingredients)
+
+
+class FavoriteRecipeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для получения избранных рецептов."""
+    permission_classes = [IsAuthenticated]
+    serializer_class = RecipeCreateSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Recipe.objects.filter(favorites__user=user)
+
+
+class ShoppingCartViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для получения рецептов в списке покупок."""
+    permission_classes = [IsAuthenticated]
+    serializer_class = RecipeCreateSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Recipe.objects.filter(shopping_cart__user=user)
