@@ -59,6 +59,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
     serializer_class = RecipeCreateSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        # Если пользователь аутентифицирован, добавляем информацию о корзине и избранном
+        if user.is_authenticated:
+            queryset = queryset.prefetch_related('favorites', 'shopping_cart')
+
+        return queryset
+
     def get_permissions(self):
         """Метод для прав доступа, в зависимости от метода."""
         if self.request.method in ("GET", "POST"):

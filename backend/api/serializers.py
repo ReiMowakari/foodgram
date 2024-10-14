@@ -160,6 +160,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ).data
         return recipe
 
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request.user.is_authenticated:
+            return obj.favorites.filter(user=request.user).exists()
+        return False
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        if request.user.is_authenticated:
+            return obj.shopping_cart.filter(user=request.user).exists()
+        return False
+
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
     """Сериалайзер для добавления рецепта в список покупок."""

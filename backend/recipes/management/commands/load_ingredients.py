@@ -7,11 +7,8 @@ from recipes.models import Ingredient
 class Command(BaseCommand):
     help = 'Загружает ингредиенты в БД из формата JSON'
 
-    def add_arguments(self, parser):
-        parser.add_argument('file_path', type=str)
-
     def handle(self, *args, **kwargs):
-        file_path = kwargs.get('file_path')
+        file_path = os.path.join('data', 'ingredients.json')
 
         if not os.path.exists(file_path):
             self.stdout.write(self.style.ERROR('Файл не найден.'))
