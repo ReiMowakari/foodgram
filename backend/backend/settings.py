@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'foodgramexamplekey')
 
 DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
-ALLOWED_HOSTS = ['87.255.17.15', 'reifoodgram.hopto.org']
+ALLOWED_HOSTS = ['89.169.163.86', 'reifoodgramya.zapto.org']
 
 AUTH_USER_MODEL = 'users.User'
 
