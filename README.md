@@ -1,4 +1,9 @@
-Находясь в папке infra, выполните команду docker-compose up. При выполнении этой команды контейнер frontend, описанный в docker-compose.yml, подготовит файлы, необходимые для работы фронтенд-приложения, а затем прекратит свою работу.
+Тестовые пользователи: 
+- test1@test.ru (pass - 123456789test1)
+- test2@test.ru (pass - 123456789Test)
 
-По адресу http://localhost изучите фронтенд веб-приложения, а по адресу http://localhost/api/docs/ — спецификацию API.
+Сайт - https://reifoodgramya.zapto.org/
 
+Данные от админки:
+- ReiMowakari@yandex.ru
+- 998769138Rei
