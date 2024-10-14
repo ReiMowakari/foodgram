@@ -7,10 +7,8 @@ from .constants import (
 )
 from recipes.models import (
     Ingredient,
-    Favorite,
     Recipe,
     RecipeIngredients,
-    ShoppingCart,
     Tag
 )
 from users.serializers import UserSerializer

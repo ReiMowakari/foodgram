@@ -62,11 +62,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-
-        # Если пользователь аутентифицирован, добавляем информацию о корзине и избранном
         if user.is_authenticated:
             queryset = queryset.prefetch_related('favorites', 'shopping_cart')
-
         return queryset
 
     def get_permissions(self):

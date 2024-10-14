@@ -23,7 +23,18 @@ class Command(BaseCommand):
                 measurement_unit=ingredient_data['measurement_unit']
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f'Ингредиент "{ingredient.name}" создан'))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Ингредиент "{ingredient.name}" создан'
+                    )
+                )
             else:
-                self.stdout.write(self.style.WARNING(f'Ингредиент "{ingredient.name}" уже существует.'))
-        self.stdout.write(self.style.SUCCESS('Ингредиенты успешно загружены.'))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'Ингредиент "{ingredient.name}" уже существует.'
+                    )
+                )
+        self.stdout.write(
+            self.style.SUCCESS('Ингредиенты успешно загружены.'
+                               )
+        )

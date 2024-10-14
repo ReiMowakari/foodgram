@@ -23,7 +23,18 @@ class Command(BaseCommand):
                 slug=tags_data['slug']
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f'Тэг "{tag.name}" создан'))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Тэг "{tag.name}" создан'
+                    )
+                )
             else:
-                self.stdout.write(self.style.WARNING(f'Тэг "{tag.name}" уже существует.'))
-        self.stdout.write(self.style.SUCCESS('Тэги успешно загружены.'))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'Тэг "{tag.name}" уже существует.'
+                    )
+                )
+        self.stdout.write(
+            self.style.SUCCESS('Тэги успешно загружены.'
+            )
+        )
