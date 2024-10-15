@@ -1,8 +1,7 @@
 from django.conf import settings
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -10,7 +9,6 @@ from rest_framework.permissions import (
     IsAuthenticated
 )
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .constants import (
     UNEXIST_RECIPE_CREATE_ERROR, DUPLICATE_OF_RECIPE_ADD_CART,
