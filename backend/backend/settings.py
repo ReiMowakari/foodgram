@@ -11,6 +11,8 @@ ALLOWED_HOSTS = ['89.169.163.86', 'reifoodgramya.zapto.org', 'localhost']
 
 AUTH_USER_MODEL = 'users.User'
 
+CSRF_TRUSTED_ORIGINS = ['https://reifoodgramya.zapto.org', 'https://89.169.163.86']
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -128,3 +130,5 @@ DJOSER = {
         'user': ['users.permissions.CurrentUserOrAdminOrReadOnly'],
     }
 }
+
+HOST = 'reifoodgramya.zapto.org'

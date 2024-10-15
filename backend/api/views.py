@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -8,6 +10,7 @@ from rest_framework.permissions import (
     IsAuthenticated
 )
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .constants import (
     UNEXIST_RECIPE_CREATE_ERROR, DUPLICATE_OF_RECIPE_ADD_CART,
@@ -79,21 +82,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     @action(detail=True, methods=['GET'], url_path='get-link')
-    def get_short_link(self, request, pk):
+    def get_short_link(self, request, pk=None):
         """Метод для получения короткой ссылки."""
-        try:
-            recipe = self.get_object()
-        except Recipe.DoesNotExist:
-            return Response(
-                {'message': UNEXIST_RECIPE_CREATE_ERROR},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        scheme = request.scheme
-        host = request.get_host()
-        domain = f'{scheme}://{host}'
+        get_object_or_404(Recipe, id=pk)
         return Response(
-            {'short-link': f'{domain}/s/{recipe.short_link}'},
+            {'short-link': f'{settings.HOST}/recipes/{pk}'},
             status=status.HTTP_200_OK
         )
 
