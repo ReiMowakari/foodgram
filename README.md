@@ -5,6 +5,9 @@
 Стек: Python3, Django3, Django REST framework, React, PostgreSQL, gunicorn, nginx
 
 Проект доступен по доменному имени https://reifoodgramya.zapto.org/
+Данные от админки:
+login - root@root.ru
+pass - 123456789root
 
 # Как запустить проект:
 
