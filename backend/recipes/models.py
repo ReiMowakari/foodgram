@@ -98,15 +98,15 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self) -> str:
+        return f'/recipes/{self.pk}/'
+
     class Meta:
         db_table = 'recipe'
         default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['name']
-
-    def get_absolute_url(self) -> str:
-        return f'/api/recipes/{self.pk}/'
 
 
 class RecipeTags(models.Model):
