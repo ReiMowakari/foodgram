@@ -9,7 +9,6 @@ from recipes.models import (
     Ingredient,
     Recipe,
     RecipeIngredients,
-    RecipeLink,
     Tag
 )
 from users.serializers import UserSerializer
@@ -180,25 +179,3 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-
-
-class RecipeLinkSerializer(serializers.ModelSerializer):
-    recipe = serializers.PrimaryKeyRelatedField(
-        queryset=Recipe.objects.all(),
-        write_only=True
-    )
-    short_link = serializers.SerializerMethodField()
-
-    class Meta:
-        model = RecipeLink
-        fields = ['recipe', 'short_link']
-
-    def get_short_link(self, obj):
-        request = self.context.get('request')
-        host = request.get_host()
-        return f"{request.scheme}://{host}/s/{obj.link}"
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['short-link'] = representation.pop('short_link')
-        return representation
