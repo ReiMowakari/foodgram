@@ -1,8 +1,11 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    IngredientViewSet, RecipeViewSet, TagViewSet,
+    IngredientViewSet, RecipeViewSet,
+    RecipeRedirectView, TagViewSet,
 )
 from users.views import UserViewSet
 
@@ -16,6 +19,7 @@ api_v1.register('tags', TagViewSet, basename='tag')
 api_v1.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
+    path('s/<str:link>/', RecipeRedirectView.as_view(), name='recipe-redirect'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('', include(api_v1.urls)),

@@ -1,7 +1,8 @@
-from django.conf import settings
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -9,6 +10,7 @@ from rest_framework.permissions import (
     IsAuthenticated
 )
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .constants import (
     UNEXIST_RECIPE_CREATE_ERROR, DUPLICATE_OF_RECIPE_ADD_CART,
@@ -17,11 +19,13 @@ from .constants import (
 )
 from .filters import RecipeFilter, IngredientFilter
 from recipes.models import (
-    Ingredient, Favorite, Recipe, RecipeIngredients, ShoppingCart, Tag
+    Ingredient, Favorite, Recipe, RecipeIngredients,
+    RecipeLink, ShoppingCart, Tag
 )
 from .serializers import (
     IngredientSerializer,
     RecipeCreateSerializer,
+    RecipeLinkSerializer,
     ShortRecipeSerializer,
     TagSerializer,
 )
@@ -79,14 +83,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Метод для создания рецепта."""
         serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=['GET'], url_path='get-link')
-    def get_short_link(self, request, pk=None):
-        """Метод для получения короткой ссылки."""
-        get_object_or_404(Recipe, id=pk)
-        return Response(
-            {'short-link': f'{settings.HOST}/recipes/{pk}'},
-            status=status.HTTP_200_OK
+    @action(detail=True, methods=['get'], url_path='get-link')
+    def get_short_link(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        recipe_link, _ = RecipeLink.objects.get_or_create(recipe=recipe)
+        serializer = RecipeLinkSerializer(
+            recipe_link,
+            context={'request': request}
         )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST', 'DELETE'])
     def shopping_cart(self, request, pk):
@@ -147,3 +152,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         return create_report_of_shopping_list(user, ingredients)
+
+
+class RecipeRedirectView(APIView):
+    """Класс для редиректа короктой ссылки на рецепт."""
+    def get(self, request, link, *args, **kwargs):
+        recipe_link = get_object_or_404(RecipeLink, link=link)
+        recipe = recipe_link.recipe
+        recipe_detail_url = reverse(
+            'recipes-detail',
+            kwargs={'pk': recipe.id}
+        )
+        scheme_url = request.scheme
+        host_url = request.get_host()
+        full_url = f'{scheme_url}://{host_url}{recipe_detail_url}'
+        return HttpResponseRedirect(full_url)

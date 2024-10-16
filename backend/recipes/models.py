@@ -90,10 +90,6 @@ class Recipe(models.Model):
                 message=COOKING_TIME_ERROR_MESSAGE),
         ]
     )
-    short_link = models.CharField(
-        verbose_name='Короткая ссылка', default=generate_short_link,
-        max_length=MAX_LENGTH_SHORT_LINK
-    )
 
     def __str__(self):
         return self.name
@@ -146,6 +142,33 @@ class RecipeIngredients(models.Model):
         default_related_name = 'recipe_ingredients'
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
+
+
+class RecipeLink(models.Model):
+    """ Модель для связи рецептов с короткой ссылкой."""
+    recipe = models.ForeignKey(
+        'Recipe',
+        on_delete=models.CASCADE,
+        verbose_name='Связь с рецептом.'
+    )
+    link = models.CharField(
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='Ссылка на рецепт',
+        default=generate_short_link,
+    )
+
+    class Meta:
+        default_related_name = 'recipe_link'
+        verbose_name = 'Связь с рецептом.'
+        verbose_name_plural = 'Связь с рецептами.'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'link'],
+                name='unique_recipe_link'
+            )
+        ]
 
 
 class ShoppingCart(models.Model):
